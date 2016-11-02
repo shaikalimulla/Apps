@@ -1,0 +1,163 @@
+package com.example.ali.loginregister;
+
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+
+public class Db_connection extends AppCompatActivity implements View.OnClickListener {
+
+    Button fetch;
+    TextView text;
+    EditText et;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_db_connection);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        fetch= (Button) findViewById(R.id.button);
+        text = (TextView) findViewById(R.id.tv);
+        et = (EditText) findViewById(R.id.name);
+
+        fetch.setOnClickListener(this);
+
+
+    }
+
+
+    class task extends AsyncTask<String, String, Void>
+    {
+        private ProgressDialog progressDialog = new ProgressDialog(Db_connection.this);
+        InputStream is = null ;
+        String result = "";
+        protected void onPreExecute() {
+            progressDialog.setMessage("Fetching data...");
+            progressDialog.show();
+            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface arg0) {
+                    task.this.cancel(true);
+                }
+            });
+        }
+        @Override
+        protected Void doInBackground(String... params) {
+            String url_select = "http://john-shuzhe.byethost13.com/Demo.php";
+            //final URL url = new URL("http://john-shuzhe.byethost13.com/demo.php");
+
+            HttpClient httpClient = new DefaultHttpClient();
+            System.out.println(is);
+            HttpPost httpPost = new HttpPost(url_select);
+
+            ArrayList<NameValuePair> param = new ArrayList<NameValuePair>();
+
+            try {
+                httpPost.setEntity(new UrlEncodedFormEntity(param));
+
+                HttpResponse httpResponse = httpClient.execute(httpPost);
+                HttpEntity httpEntity = httpResponse.getEntity();
+                System.out.println(httpEntity);
+
+                //read content
+                is =  httpEntity.getContent();
+
+
+            } catch (Exception e) {
+
+                Log.e("log_tag", "Error in http connection " + e.toString());
+                //Toast.makeText(MainActivity.this, "Please Try Again", Toast.LENGTH_LONG).show();
+            }
+            try {
+                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                StringBuilder sb = new StringBuilder();
+                String line = "";
+                while((line=br.readLine())!=null)
+                {
+                    sb.append(line+"\n");
+                }
+                is.close();
+                result=sb.toString();
+
+            } catch (Exception e) {
+                // TODO: handle exception
+                Log.e("log_tag", "Error converting result "+e.toString());
+            }
+
+            return null;
+
+        }
+        protected void onPostExecute(Void v) {
+
+            // ambil data dari Json database
+            try {
+                System.out.println("Start: ");
+                System.out.println(result);
+                JSONArray Jarray = new JSONArray(result);
+                System.out.println("haha1");
+                for(int i=0;i<Jarray.length();i++)
+                {
+                    JSONObject Jasonobject = null;
+                    //text_1 = (TextView)findViewById(R.id.txt1);
+                    Jasonobject = Jarray.getJSONObject(i);
+
+                    //get an output on the screen
+                    //String id = Jasonobject.getString("id");
+                    String name = Jasonobject.getString("name");
+                    String db_detail="";
+
+                    if(et.getText().toString().equalsIgnoreCase(name)) {
+                        db_detail = Jasonobject.getString("detail");
+                        text.setText(db_detail);
+                        break;
+                    }
+                    //text_1.append(id+"\t\t"+name+"\t\t"+password+"\t\t"+"\n");
+
+                }
+                this.progressDialog.dismiss();
+
+            } catch (Exception e) {
+                // TODO: handle exception
+                Log.e("log_tag", "Error parsing data "+e.toString());
+            }
+        }
+    }
+
+
+    @Override
+    public void onClick(View v) {
+        // TODO Auto-generated method stub
+        Toast.makeText(Db_connection.this, "Fetching", Toast.LENGTH_SHORT).show();
+        new task().execute();
+
+    }
+
+}
