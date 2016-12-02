@@ -47,6 +47,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+/*
+References:
+1. https://developer.android.com/guide/topics/ui/layout/listview.html
+2. https://developer.android.com/guide/topics/ui/layout/gridview.html
+3. https://developer.android.com/training/camera/photobasics.html
+4. https://material.io/icons/#ic_content_cut
+5. https://www.google.com/search?q=folder+icons&espv=2&biw=1366&bih=662&source=lnms&tbm=isch&sa=X&ved=0ahUKEwj0q9yBgM3QAhXBxYMKHU37ALUQ_AUIBigB#tbm=isch&q=folder+icons&chips=q:folder+icons,g_2:red&imgrc=LV4afJEUIaWGkM%3A
+6. https://www.google.com/search?q=camera+icon+512X512&tbm=isch&tbs=rimg:CXlwiaLMFoJjIjiY0k8oLS8FEgXWMk6itMyuEmnjqVfSQmKc6DBQaHJmkMxLqp0HMpRtAto8LRUNpVk6B1lPvDIKtyoSCZjSTygtLwUSEbj0sfoZnNbaKhIJBdYyTqK0zK4Rd_1XzoLb3s5cqEgkSaeOpV9JCYhGGcj5RjqrbwioSCZzoMFBocmaQEfeo9vSS2twWKhIJzEuqnQcylG0RjGT7YTftjIQqEgkC2jwtFQ2lWRESMfff4058-SoSCToHWU-8Mgq3ERZzhH5qSw-R&tbo=u#imgrc=eXCJoswWgmO_pM%3A
+7. https://images.search.yahoo.com/yhs/search;_ylt=A0LEVvcQDkFY5SMAlcEnnIlQ?p=gallery+icon+512+512&fr=yhs-mozilla-002&fr2=piv-web&hspart=mozilla&hsimp=yhs-002#id=38&iurl=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Fios-7-style-metro-ui-icons%2F512%2FMetroUI_Windows8_Photos.png&action=click
+*/
+
 public class MainActivity extends AppCompatActivity {
     public static ArrayList<String> dirList = new ArrayList<String>();
     public ArrayList<Integer> dirSizeList = new ArrayList<Integer>();
@@ -62,28 +73,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        int cameraPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        int writePermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if(cameraPermissionCheck!= PackageManager.PERMISSION_GRANTED || writePermissionCheck!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, 0);
+        }
+
         System.out.println("MainActivity onCreate called");
-/*
-        final ActionBar actionBar = getActionBar();
-        actionBar.setCustomView(R.layout.custom_action_bar);
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setDisplayUseLogoEnabled(false);
-        actionBar.setDisplayShowHomeEnabled(false);
-
-
-         ActionBar actionBar = getActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
-        //actionBar.setDisplayShowHomeEnabled(false);
-        LayoutInflater mInflater = LayoutInflater.from(this);
-
-        View mCustomView = mInflater.inflate(R.layout.custom_action_bar, null);
-
-
-        actionBar.setCustomView(mCustomView);
-        actionBar.setDisplayShowCustomEnabled(true);
-
-*/
 
         LayoutInflater inflater = (LayoutInflater) getSupportActionBar().getThemedContext()
                 .getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -134,8 +131,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view,
                                 int position, long id) {
-            //Toast.makeText(MainActivity.this, "You Clicked at " +dirList.get(position), Toast.LENGTH_SHORT).show();
-
             Intent intent = new Intent(getApplicationContext(), GridViewActivity.class);
             intent.putExtra("dir_name", dirList.get(position));
             startActivity(intent);
@@ -143,35 +138,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         clickImageButton = (ImageButton) findViewById(R.id.clickBtn);
-        int cameraPermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        int writePermissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if(cameraPermissionCheck!= PackageManager.PERMISSION_GRANTED || writePermissionCheck!= PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, 0);
-        }
-
     }
-
-    @Override
-    public void onResume()
-    {
-        System.out.println("on Resume ");
-        super.onResume();
-        /*int picIndex = dirList.indexOf("Pictures");
-
-        System.out.println("on Resume ok" + picIndex+ dirSizeList.get(picIndex));
-
-        adapter.notifyDataSetChanged();
-
-        if(adapter!= null && list!=null) {
-            System.out.println("on Resume ok list not null");
-            //adapter = new CustomList(MainActivity.this, dirList, dirSizeList);
-            //list = (ListView) findViewById(R.id.list);
-            //list.setAdapter(adapter);
-            adapter.notifyDataSetChanged();
-        }*/
-    }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -240,6 +207,9 @@ public class MainActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                     && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 clickImageButton.setEnabled(true);
+                System.out.println("onRequestPermissionsResult called");
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(intent);
             }
         }
     }
@@ -251,9 +221,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void clickPic(View view)
     {
-        /*Intent intent = new Intent(getApplicationContext(), GridViewActivity.class);
-        intent.putExtra("call_click_image", "call");
-        startActivity(intent);*/
         System.out.println("click picture called");
         Context c = this;
         System.out.println("click picture context"+ c);
@@ -292,7 +259,6 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("saveDir created");
         File image = File.createTempFile(imageFileName, ".jpg", saveDir);
         System.out.println("image created");
-        // Save a file: path for use with ACTION_VIEW intents
         currentImagePath = image.getAbsolutePath();
         System.out.println("image create exit"+currentImagePath);
         return image;

@@ -86,8 +86,6 @@ public class imageDisplayActivity extends AppCompatActivity {
         switch (id) {
             case R.id.action_back:
                 onBackPressed();
-                //imageDisplayActivity.this.finish();
-                //System.exit(0);
                 return true;
 
             case R.id.action_info:

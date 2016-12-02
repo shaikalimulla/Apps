@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ImageGallery</string>
+    <string name="app_name">QuickPicPlus</string>
     <string name="bar_title">Picture Gallery</string>
     <string-array name="edit_menu">
         <item> Copy </item>

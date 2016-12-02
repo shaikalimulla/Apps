@@ -34,11 +34,8 @@ public class CustomList extends ArrayAdapter<String> {
         View rowView= inflater.inflate(R.layout.list_row_view, null, true);
         TextView txtTitle = (TextView) rowView.findViewById(R.id.txt);
         TextView folderSize = (TextView) rowView.findViewById(R.id.folder_size);
-        Typeface custom_font = Typeface.createFromAsset(context.getAssets(),  "fonts/CaviarDreams_Italic.ttf");
 
         ImageView imageView = (ImageView) rowView.findViewById(R.id.img);
-        txtTitle.setTypeface(custom_font);
-        //folderSize.setTypeface(custom_font);
         txtTitle.setText(dirList.get(position));
         folderSize.setText(String.valueOf(dirSizeList.get(position)));
         System.out.println("check " + dirSizeList.get(position));

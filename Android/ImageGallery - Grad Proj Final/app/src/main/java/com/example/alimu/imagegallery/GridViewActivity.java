@@ -129,13 +129,6 @@ public class GridViewActivity extends MainActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid_view);
         System.out.println("GridActivity onCreate called");
-        /*
-        call_click_image = getIntent().getExtras().getString("call_click_image");
-
-        if(!call_click_image.isEmpty() && call_click_image.equals("call")){
-            saveImage();
-        }
-        */
 
         LayoutInflater inflater = (LayoutInflater) getSupportActionBar().getThemedContext()
                 .getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -169,11 +162,8 @@ public class GridViewActivity extends MainActivity {
         gridview.setMultiChoiceModeListener(new MultiChoiceModeListener());
         gridview.setDrawSelectorOnTop(true);
         gridview.setSelector(getResources().getDrawable(R.drawable.highlight_image));
-        //registerForContextMenu(gridview);
 
         System.out.println("setAdapter called"+dir_name);
-
-        //System.out.println("dirList " + MainActivity.dirList);
 
         loadFilesAsync = new LoadFilesAsync(imageAdapter, dir_name);
         loadFilesAsync.execute();
@@ -183,7 +173,6 @@ public class GridViewActivity extends MainActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id)
             {
-                //gridview.setDrawSelectorOnTop(false);
                 System.out.println("onItemClick ");
 
                 gridview.setSelector(new StateListDrawable());
@@ -200,7 +189,6 @@ public class GridViewActivity extends MainActivity {
             {
                 System.out.println("onItemLongClick ");
                 imageAdapter.setSelectedPosition(position);
-                //openContextMenu(v);
                 return true;
             }
         });
@@ -236,7 +224,7 @@ public class GridViewActivity extends MainActivity {
             mode.setSubtitle("1 item selected");
             MenuInflater inflater = getMenuInflater();
             inflater.inflate(R.menu.onselect_menu, menu);
-
+            operationSelected = false;
             return true;
         }
 
@@ -263,9 +251,8 @@ public class GridViewActivity extends MainActivity {
         public void generateImages(File storageDir){
             String imageFileName = selecteditem.substring(selecteditem.lastIndexOf("/")+1, selecteditem.lastIndexOf(".jpg"));
             System.out.println("createNewFile "+ imageFileName);
-            //File file = new File(subDir,selecteditem.substring(selecteditem.lastIndexOf("/")+1));
+
             try {
-                //file.createNewFile();
                 File srcImage = new File(selecteditem);
                 File dstImage = File.createTempFile(imageFileName, ".jpg", storageDir);
                 System.out.println("src "+ srcImage);
@@ -299,7 +286,6 @@ public class GridViewActivity extends MainActivity {
                             File file = new File(selecteditem);
                             file.delete();
                             sendBroadcastToGallery(null);
-                            //imageAdapter.add(curFile.getAbsolutePath());
                         }
                     }
                 } else if(operation.equals("add")){
@@ -319,7 +305,6 @@ public class GridViewActivity extends MainActivity {
                                 File file = new File(selecteditem);
                                 file.delete();
                                 sendBroadcastToGallery(null);
-                                //imageAdapter.add(curFile.getAbsolutePath());
                             }
                         }
                     } else if(operation.equals("add")){
@@ -337,9 +322,6 @@ public class GridViewActivity extends MainActivity {
             File file = new File(selecteditem);
             dirName = file.getParent().substring(file.getParent().lastIndexOf(File.separator) + 1);
             System.out.println("last index dirName"+dirName);
-
-
-            //File dcimDir = new File(DCIMPath);
             findImage(DCIMPath, dirName, "delete");
             findImage(picturesPath, dirName, "delete");
         }
@@ -354,14 +336,19 @@ public class GridViewActivity extends MainActivity {
 
                     System.out.println("item_delete "+selecteditem);
 
-                    View tv = (View) gridview.getChildAt(positionsList.get(i));
-                    tv.setBackgroundColor(Color.TRANSPARENT);
-                    tv.invalidate();
+                    int firstPosition = gridview.getFirstVisiblePosition();
+                    int lastPosition = gridview.getLastVisiblePosition();
+                    int position = (Integer) positionsList.get(i);
+                    if ((position < firstPosition) || (position > lastPosition)) {
+
+                    } else{
+                        View tv = (View) gridview.getChildAt(position - firstPosition);
+                        tv.setBackgroundColor(Color.TRANSPARENT);
+                        tv.invalidate();
+                    }
 
                     imageAdapter.remove(selecteditem);
                     removeImageFromPhone(selecteditem);
-
-                    //gridview.invalidateViews();
                     System.out.println("deletion done");
                 }
             }
@@ -390,7 +377,8 @@ public class GridViewActivity extends MainActivity {
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dialog.cancel();
-                            positionsList.clear();
+                            destroyView();
+                            //positionsList.clear();
                         }
                     });
 
@@ -412,9 +400,16 @@ public class GridViewActivity extends MainActivity {
 
                     System.out.println("item_copy "+selecteditem);
 
-                    View tv = (View) gridview.getChildAt(positionsList.get(i));
-                    tv.setBackgroundColor(Color.TRANSPARENT);
-                    tv.invalidate();
+                    int firstPosition = gridview.getFirstVisiblePosition();
+                    int lastPosition = gridview.getLastVisiblePosition();
+                    int position = (Integer) positionsList.get(i);
+                    if ((position < firstPosition) || (position > lastPosition)) {
+
+                    } else{
+                        View tv = (View) gridview.getChildAt(position - firstPosition);
+                        tv.setBackgroundColor(Color.TRANSPARENT);
+                        tv.invalidate();
+                    }
 
                     findImage(DCIMPath, dirName, "add");
                     findImage(picturesPath, dirName, "add");
@@ -446,8 +441,6 @@ public class GridViewActivity extends MainActivity {
                 case R.id.item_copy:
                     System.out.println("item_copy ");
                     operationSelected = true;
-                    //MainActivity main = new MainActivity();
-                    //System.out.println("dirList " + MainActivity.dirList);
 
                     PopupMenu popup_copy = new PopupMenu(GridViewActivity.this, findViewById(R.id.item_copy));
 
@@ -502,20 +495,22 @@ public class GridViewActivity extends MainActivity {
             }
         }
 
-        public void onDestroyActionMode(ActionMode mode) {
-            System.out.println("onDestroyActionMode called "+positionsList.size());
-
-            if(operationSelected){
-                return;
-            }
-
+        public void destroyView(){
             for (int i = (positionsList.size() - 1); i >= 0; i--) {
                 if (positionsList.get(i)!=null) {
                     selecteditem = imageAdapter.getItem(positionsList.get(i));
                     System.out.println("selecteditem "+selecteditem);
-                    View tv = (View) gridview.getChildAt(positionsList.get(i));
-                    tv.setBackgroundColor(Color.TRANSPARENT);
-                    tv.invalidate();
+
+                    int firstPosition = gridview.getFirstVisiblePosition();
+                    int lastPosition = gridview.getLastVisiblePosition();
+                    int position = (Integer) positionsList.get(i);
+                    if ((position < firstPosition) || (position > lastPosition)) {
+
+                    } else{
+                        View tv = (View) gridview.getChildAt(position - firstPosition);
+                        tv.setBackgroundColor(Color.TRANSPARENT);
+                        tv.invalidate();
+                    }
                     System.out.println("deletion done");
                 }
             }
@@ -523,7 +518,15 @@ public class GridViewActivity extends MainActivity {
             gridview.setDrawSelectorOnTop(false);
             gridview.invalidateViews();
             positionsList.clear();
-            //mode.finish();
+        }
+
+        public void onDestroyActionMode(ActionMode mode) {
+            System.out.println("onDestroyActionMode called "+positionsList.size()+ "operationSelected:" + operationSelected);
+
+            if(operationSelected){
+                return;
+            }
+            destroyView();
         }
 
 
@@ -561,7 +564,6 @@ public class GridViewActivity extends MainActivity {
                     gridview.setSelector(new StateListDrawable());
                 }
 
-                //View tv = (View) gridview.getChildAt(position);
                 positionsList.remove((Integer)position);
             }
             switch (selectCount) {
@@ -584,37 +586,7 @@ public class GridViewActivity extends MainActivity {
         intent.putExtra("refresh", true);
         startActivityForResult(intent, 12);
         System.out.println("startActivityForResult ");
-/*
-            if(adapter!= null && list!=null) {
-
-                int picIndex = dirList.indexOf("Pictures");
-
-                System.out.println("onBackPressed Grid ok" + picIndex+ dirSizeList.get(picIndex));
-
-                adapter = new CustomList(this, dirList, dirSizeList);
-                list = (ListView) findViewById(R.id.list);
-
-                //list.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
-        }*/
     }
-/*
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v,
-                                    ContextMenu.ContextMenuInfo menuInfo) {
-        System.out.println("onCreateContextMenu ");
-        //if (v.getId()==R.id.imgGrid) {
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
-            //menu.setHeaderTitle(Countries[info.position]);
-            String[] menuItems = getResources().getStringArray(R.array.edit_menu);
-        System.out.println("menuItems ");
-            for (int i = 0; i<menuItems.length; i++) {
-                System.out.println("menuItems: menuItems[i] ");
-                menu.add(Menu.NONE, i, i, menuItems[i]);
-            }
-        //}
-    }
-*/
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -623,11 +595,6 @@ public class GridViewActivity extends MainActivity {
         menu.setHeaderTitle("Context Menu");
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
-
-        /*
-        AdapterView.AdapterContextMenuInfo cmi = (AdapterView.AdapterContextMenuInfo) menuInfo;
-        menu.add(1, cmi.position, 0, "Action 1");
-        menu.add(2, cmi.position, 0, "Action 2");*/
     }
 
     @Override
@@ -637,9 +604,6 @@ public class GridViewActivity extends MainActivity {
         String[] menuItems = getResources().getStringArray(R.array.edit_menu);
         String menuItemName = menuItems[menuItemIndex];
         Toast.makeText(getApplicationContext(),menuItemName,Toast.LENGTH_LONG).show();
-        //String listItemName = Countries[info.position];
-        //TextView text = (TextView)findViewById(R.id.footer);
-        //text.setText(String.format("Selected %s for item %s", menuItemName, listItemName));
         return true;
     }
 
@@ -648,25 +612,6 @@ public class GridViewActivity extends MainActivity {
     {
         System.out.println("on Resume grid ");
         super.onResume();
-/*
-        if(imageAdapter!= null && gridview!=null) {
-            System.out.println("on Resume grid image adapter not null");
-            imageAdapter.notifyDataSetChanged();
-        }
-
-        int picIndex = dirList.indexOf("Pictures");
-
-        System.out.println("on Resume ok" + picIndex+ dirSizeList.get(picIndex));
-
-        adapter.notifyDataSetChanged();
-
-        if(adapter!= null && list!=null) {
-            System.out.println("on Resume ok list not null");
-            //adapter = new CustomList(MainActivity.this, dirList, dirSizeList);
-            //list = (ListView) findViewById(R.id.list);
-            //list.setAdapter(adapter);
-            adapter.notifyDataSetChanged();
-        }*/
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -686,21 +631,6 @@ public class GridViewActivity extends MainActivity {
             imageAdapter.add(currentImagePath);
             gridview.invalidateViews();
             System.out.println("REQUEST_TAKE_PHOTO done");
-
-            /*
-            //if(data.getData()!=null) {
-
-                //currentPicPath = data.getExtras().getString("current_pic_path");
-                //System.out.println("onActivityResult Grid called " + currentPicPath);
-            //}
-
-            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE );
-            File f = new File(currentPicPath);
-            Uri contentUri = Uri.fromFile(f);
-            mediaScanIntent.setData(contentUri);
-            this.sendBroadcast(mediaScanIntent);
-            */
-            //imageAdapter.add(currentPicPath);
         } else if(requestCode == REQUEST_TAKE_PHOTO && resultCode != RESULT_OK){
             System.out.println("onActivityResult Grid called resultCode not ok ");
             File file = new File(currentImagePath );
@@ -718,12 +648,6 @@ public class GridViewActivity extends MainActivity {
                 clickPic(view);
             }
         }
-        /*
-        if (requestCode == 4 && resultCode == RESULT_OK) {
-            System.out.println("on back called ");
-            gridview.setSelector(new StateListDrawable());
-        }*/
-
     }
 
     public void sendBroadcastToGallery(){
@@ -794,10 +718,5 @@ public class GridViewActivity extends MainActivity {
 
             return imageView;
         }
-    }
-
-    public void saveImage()
-    {
-
     }
 }
